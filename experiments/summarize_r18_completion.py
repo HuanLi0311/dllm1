@@ -9,6 +9,7 @@ import hashlib
 import json
 import math
 import statistics
+import tempfile
 from pathlib import Path
 
 
@@ -336,6 +337,13 @@ def _self_check() -> None:
         assert str(error) == "sentinel"
     else:
         raise AssertionError("fail-closed check did not fail")
+    with tempfile.TemporaryDirectory() as directory:
+        plain = Path(directory) / "sample.json"
+        compressed = Path(directory) / "sample.json.gz"
+        plain.write_text('{"value": 7}\n')
+        with gzip.open(compressed, "wt", encoding="utf-8") as handle:
+            json.dump({"value": 7}, handle)
+        assert _load(plain) == _load(compressed) == {"value": 7}
     print(json.dumps({"self_check": "ok"}))
 
 
