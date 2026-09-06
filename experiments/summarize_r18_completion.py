@@ -169,7 +169,7 @@ def _geometry_summary(paths: list[Path], parameters: tuple[str, ...], masks: tup
         _require(set(cells) == expected_cells,
                  f"geometry grid mismatch for seed {seed}: missing={expected_cells - set(cells)}")
         by_seed[seed] = cells
-        inputs.append({"path": str(path.relative_to(WORKSPACE)), "sha256": _sha256(path)})
+        inputs.append({"path": str(path.resolve().relative_to(WORKSPACE)), "sha256": _sha256(path)})
     _require(set(by_seed) == {0, 1, 2}, f"geometry seeds must be 0--2, got {sorted(by_seed)}")
 
     seed_means = {}
