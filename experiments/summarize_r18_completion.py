@@ -67,9 +67,11 @@ def _close(left: float, right: float, message: str) -> None:
 
 
 def _mean_sd(values: list[float]) -> dict:
+    sd = statistics.stdev(values) if len(values) > 1 else 0.0
     return {
         "mean": statistics.fmean(values),
-        "sd": statistics.stdev(values) if len(values) > 1 else 0.0,
+        "sd": sd,
+        "sem": sd / math.sqrt(len(values)) if len(values) > 1 else 0.0,
         "values": values,
     }
 
@@ -164,8 +166,13 @@ def _geometry_summary(paths: list[Path], parameters: tuple[str, ...], masks: tup
                      f"non-finite geometry cell: {path} {key}")
             _require(oracle <= rank1 + 1e-10 and oracle <= fitted_top + 1e-10,
                      f"oracle ordering violation: {path} {key}")
-            cells[key] = {"rank1": rank1, "diagonal": diagonal, "delta": diagonal - rank1,
-                          "oracle_rank1": oracle}
+            cells[key] = {
+                "rank1": rank1,
+                "diagonal": diagonal,
+                "delta": diagonal - rank1,
+                "log_diagonal_over_rank1": math.log(diagonal / rank1),
+                "oracle_rank1": oracle,
+            }
         _require(set(cells) == expected_cells,
                  f"geometry grid mismatch for seed {seed}: missing={expected_cells - set(cells)}")
         by_seed[seed] = cells
@@ -176,24 +183,53 @@ def _geometry_summary(paths: list[Path], parameters: tuple[str, ...], masks: tup
     for seed, cells in sorted(by_seed.items()):
         seed_means[str(seed)] = {
             metric: statistics.fmean(cell[metric] for cell in cells.values())
-            for metric in ("rank1", "diagonal", "delta", "oracle_rank1")
+            for metric in ("rank1", "diagonal", "delta", "log_diagonal_over_rank1", "oracle_rank1")
         }
     cells = {}
     for key in sorted(expected_cells):
         label = f"{key[0]}|{key[1]}"
         cells[label] = {
             metric: _mean_sd([by_seed[seed][key][metric] for seed in sorted(by_seed)])
-            for metric in ("rank1", "diagonal", "delta", "oracle_rank1")
+            for metric in ("rank1", "diagonal", "delta", "log_diagonal_over_rank1", "oracle_rank1")
         }
+    aggregate = {
+        metric: _mean_sd([seed_means[str(seed)][metric] for seed in sorted(by_seed)])
+        for metric in ("rank1", "diagonal", "delta", "log_diagonal_over_rank1", "oracle_rank1")
+    }
+
+    def grouped(index: int) -> dict:
+        result = {}
+        for group in sorted({key[index] for key in expected_cells}):
+            keys = [key for key in expected_cells if key[index] == group]
+            seed_values = [
+                statistics.fmean(by_seed[seed][key]["log_diagonal_over_rank1"] for key in keys)
+                for seed in sorted(by_seed)
+            ]
+            log_group = _mean_sd(seed_values)
+            result[group] = {
+                "log_diagonal_over_rank1": log_group,
+                "geometric_mean_rank1_over_diagonal": math.exp(-log_group["mean"]),
+                "rank1_favored_seed_cells": sum(
+                    by_seed[seed][key]["delta"] > 0 for seed in by_seed for key in keys
+                ),
+                "seed_cell_count": len(by_seed) * len(keys),
+            }
+        return result
     return {
         "inputs": inputs,
         "seed_means": seed_means,
-        "aggregate_over_seed_means": {
-            metric: _mean_sd([seed_means[str(seed)][metric] for seed in sorted(by_seed)])
-            for metric in ("rank1", "diagonal", "delta", "oracle_rank1")
-        },
+        "aggregate_over_seed_means": aggregate,
+        "geometric_mean_rank1_over_diagonal": math.exp(
+            -aggregate["log_diagonal_over_rank1"]["mean"]
+        ),
+        "rank1_favored_seed_cells": sum(
+            cell["delta"] > 0 for seed_cells in by_seed.values() for cell in seed_cells.values()
+        ),
+        "seed_cell_count": len(by_seed) * len(expected_cells),
         "rank1_favored_cell_means": sum(cell["delta"]["mean"] > 0 for cell in cells.values()),
         "cell_count": len(cells),
+        "by_parameter": grouped(0),
+        "by_mask": grouped(1),
         "cells": cells,
     }
 
@@ -329,7 +365,9 @@ def _continual_summary(release_root: Path, manifest_index: dict[str, str],
 
 
 def _self_check() -> None:
-    assert _mean_sd([1.0, 2.0, 3.0]) == {"mean": 2.0, "sd": 1.0, "values": [1.0, 2.0, 3.0]}
+    assert _mean_sd([1.0, 2.0, 3.0]) == {
+        "mean": 2.0, "sd": 1.0, "sem": 1 / math.sqrt(3), "values": [1.0, 2.0, 3.0]
+    }
     assert math.isclose(_mean_sem([1.0, 2.0, 3.0])["sem"], 1 / math.sqrt(3))
     try:
         _require(False, "sentinel")
