@@ -30,6 +30,12 @@ DENSE_PARAMETERS = (
     "transformer.h.0.attn.proj.weight",
     "transformer.h.19.attn.proj.weight",
 )
+BASE_PROBE_SHA256 = "a3c08f89ea6dc6190686ae11175cc03c23cd59f97a67a13f2b72c66f5c39a84d"
+AUDITED_PROBE_SHA256 = "991113e2856385fd5e85972825b7324177e7c238b2ad44075e77b9577da52cd2"
+SMDM_219_SHA256 = "2d8c9b9a730715f2c772d5bc740e12951fc160e5e8511a16835f3537401ea9bb"
+SMDM_1028_SHA256 = "ce96ce67a051613b6d7feb419c99c0b4db5bfcfaaa0833ed7f7ecbc6632841d6"
+GSM8K_SHA256 = "a191018cd0cbe45b66f6bbb19d5ee1d6f932e56cb272133778d67a91eb0e0b99"
+CORPORA_SHA256 = "918f497538950ecfe143a0b000746292379ea1f143d359c3915fd9bb4a4ebeb5"
 
 
 def _load(path: Path) -> dict:
@@ -95,13 +101,27 @@ def _verify_release(path: Path, index: dict[str, str]) -> dict:
 
 
 def _geometry_summary(paths: list[Path], parameters: tuple[str, ...], masks: tuple[str, ...],
-                      calibration_count: int, test_count: int) -> dict:
+                      calibration_count: int, test_count: int, *, model_size: int,
+                      checkpoint_sha256: str, data_sha256: str, probe_sha256: str,
+                      task_id: int | None) -> dict:
     expected_cells = {(parameter, mask) for parameter in parameters for mask in masks}
     by_seed = {}
     inputs = []
     for path in paths:
         payload = _load(path)
         _require(payload.get("status") == "ok", f"failed geometry run: {path}")
+        _require(payload.get("probe_sha256") == probe_sha256, f"wrong probe hash: {path}")
+        if probe_sha256 == AUDITED_PROBE_SHA256:
+            _require(payload.get("base_probe_sha256") == BASE_PROBE_SHA256,
+                     f"wrong audited base-probe hash: {path}")
+        _require(payload.get("checkpoint_sha256") == checkpoint_sha256,
+                 f"wrong checkpoint hash: {path}")
+        _require(payload.get("data_sha256") == data_sha256, f"wrong data hash: {path}")
+        _require(payload["config"]["model_size"] == model_size, f"wrong model size: {path}")
+        _require(payload["config"]["task_id"] == task_id, f"wrong task id: {path}")
+        _require(payload["config"]["loss_mode"] == "native_conditional", f"wrong loss: {path}")
+        _require(payload["config"]["shuffle_records"] is True, f"records were not shuffled: {path}")
+        _require(payload["config"]["sequence_length"] == 64, f"wrong sequence length: {path}")
         seed = int(payload["config"]["seed"])
         _require(seed not in by_seed, f"duplicate geometry seed: {seed}")
         cells = {}
@@ -319,7 +339,12 @@ def main() -> None:
         ]
         for path in paths:
             _verify_release(path, manifest_index)
-        r12[corpus] = _geometry_summary(paths, R12_PARAMETERS, R12_MASKS, 64, 64)
+        r12[corpus] = _geometry_summary(
+            paths, R12_PARAMETERS, R12_MASKS, 64, 64,
+            model_size=170, checkpoint_sha256=SMDM_219_SHA256,
+            data_sha256=CORPORA_SHA256, probe_sha256=AUDITED_PROBE_SHA256,
+            task_id=0 if corpus == "mt_bench" else 1,
+        )
     result = {
         "schema_version": 1,
         "status": "ok",
@@ -329,7 +354,11 @@ def main() -> None:
     }
     if args.dense_root:
         paths = [args.dense_root / f"s{seed}.json" for seed in range(3)]
-        result["dense_1028_new"] = _geometry_summary(paths, DENSE_PARAMETERS, GEOMETRY_MASKS, 64, 64)
+        result["dense_1028_new"] = _geometry_summary(
+            paths, DENSE_PARAMETERS, GEOMETRY_MASKS, 64, 64,
+            model_size=1028, checkpoint_sha256=SMDM_1028_SHA256,
+            data_sha256=GSM8K_SHA256, probe_sha256=BASE_PROBE_SHA256, task_id=None,
+        )
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(json.dumps(result, indent=2) + "\n")
     print(json.dumps({"status": "ok", "output": str(args.output)}))
