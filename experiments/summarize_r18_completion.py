@@ -100,10 +100,32 @@ def _verify_release(path: Path, index: dict[str, str]) -> dict:
     return {"path": relative, "sha256": actual}
 
 
+def _verify_r12_contract(path: Path, release_paths: list[Path], index: dict[str, str]) -> dict:
+    artifact = _verify_release(path, index)
+    contract = _load(path)
+    _require(contract.get("status") == "ok", "R12 comparison contract is not successful")
+    expected = {row["path"]: row["sha256"] for row in contract["artifacts"]}
+    for release_path in release_paths:
+        payload = _load(release_path)
+        provenance = payload.get("release_provenance", {})
+        internal = provenance.get("internal_artifact")
+        _require(internal in expected, f"R12 run absent from comparison contract: {release_path}")
+        _require(provenance.get("internal_sha256") == expected[internal],
+                 f"R12 internal hash disagrees with comparison contract: {release_path}")
+    required_checks = {
+        "identical calibration/test sizes and grids",
+        "identical corpus-control mask protocol",
+        "expected task IDs and loss modes for every comparison group",
+        "rank-1 and diagonal errors recomputed from stored sufficient statistics",
+    }
+    _require(required_checks <= set(contract["verified"]), "R12 contract lacks required checks")
+    return {**artifact, "status": "ok", "used_artifacts": len(release_paths)}
+
+
 def _geometry_summary(paths: list[Path], parameters: tuple[str, ...], masks: tuple[str, ...],
                       calibration_count: int, test_count: int, *, model_size: int,
                       checkpoint_sha256: str, data_sha256: str, probe_sha256: str,
-                      task_id: int | None) -> dict:
+                      task_id=None) -> dict:
     expected_cells = {(parameter, mask) for parameter in parameters for mask in masks}
     by_seed = {}
     inputs = []
@@ -332,6 +354,7 @@ def main() -> None:
     _require(args.output is not None, "--output is required")
     manifest_index = _manifest_index(args.manifest)
     r12 = {}
+    r12_paths = []
     for corpus, stem in (("mt_bench", "mt_170_s"), ("reversal", "reversal_170_s")):
         paths = [
             args.release_root / "raw/runs/r12_audited_controls" / f"{stem}{seed}" / "benchmark.json.gz"
@@ -339,6 +362,7 @@ def main() -> None:
         ]
         for path in paths:
             _verify_release(path, manifest_index)
+        r12_paths.extend(paths)
         r12[corpus] = _geometry_summary(
             paths, R12_PARAMETERS, R12_MASKS, 64, 64,
             model_size=170, checkpoint_sha256=SMDM_219_SHA256,
@@ -349,6 +373,9 @@ def main() -> None:
         "schema_version": 1,
         "status": "ok",
         "scope": "independent verification plus R18 dense extension; no causal corpus comparison",
+        "r12_contract": _verify_r12_contract(
+            ICLR2 / "runs/r12_audited_controls/comparison_contract.json", r12_paths, manifest_index
+        ),
         "cross_text_reuse": r12,
         "continual_reuse": _continual_summary(args.release_root, manifest_index, args.r16_summary),
     }
