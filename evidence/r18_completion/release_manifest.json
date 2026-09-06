@@ -1,0 +1,49 @@
+{
+  "schema_version": 2,
+  "status": "ok",
+  "submission_manifest": {
+    "path": "evidence/r18_completion/submission_manifest.json",
+    "sha256": "584c7009d548733ca1a0117696bfaee1da4a0bae436e2ae9f23a777e9e2d4c5a"
+  },
+  "raw_artifacts": [
+    {
+      "internal_path": "iclr_1/runs/r18_completion_20260907/dense_1028/s0.json",
+      "internal_sha256": "ccfb253bdaffae9dd7a71113ebd1ca850ba488c28b873180a44ba4fb714c95ee",
+      "release_path": "evidence/r18_completion/raw/runs/r18_completion_20260907/dense_1028/s0.json.gz",
+      "release_sha256": "1e8fe97e07ddae6d03f5512f9b301037f88161798dd70dff45aed183c0003b71"
+    },
+    {
+      "internal_path": "iclr_1/runs/r18_completion_20260907/dense_1028/s1.json",
+      "internal_sha256": "7b30cdaa04e57865e8c337b2db0874b029d48863b1c831d7a18ec8075bfcb8be",
+      "release_path": "evidence/r18_completion/raw/runs/r18_completion_20260907/dense_1028/s1.json.gz",
+      "release_sha256": "40b97878c64656d7e4bcf45c0d01637acc318a84f230fb4f2175464873c38947"
+    },
+    {
+      "internal_path": "iclr_1/runs/r18_completion_20260907/dense_1028/s2.json",
+      "internal_sha256": "80afe0a04c8669adbdac9ef1e25d1b46594c31f5686e7a453df14b4a71d90e4a",
+      "release_path": "evidence/r18_completion/raw/runs/r18_completion_20260907/dense_1028/s2.json.gz",
+      "release_sha256": "3ce61f9ba926c7dc1d90fceff3bbcffe51f7742312766fbbfdba3a681fe3198b"
+    },
+    {
+      "internal_path": "iclr_1/runs/r18_completion_20260907/summary.json",
+      "internal_sha256": "671c2ef2966fc20d460219dbd6127c0b1f7771b552585f551c91e042ad7dbe99",
+      "release_path": "evidence/r18_completion/raw/runs/r18_completion_20260907/summary.json.gz",
+      "release_sha256": "94c464e5a7d7ec3ed9d6ded2c89a87b6e4cc8ca0a4f7e994072fb3ecda3ba1e8"
+    }
+  ],
+  "public_artifacts": [
+    {
+      "path": "iclr_1/experiments/dllm_rank1_probe.py",
+      "sha256": "a3c08f89ea6dc6190686ae11175cc03c23cd59f97a67a13f2b72c66f5c39a84d"
+    },
+    {
+      "path": "iclr_1/experiments/summarize_r18_completion.py",
+      "sha256": "897d2646e1c0a833526e328acfe19ca6d7618492a70d01b0ed31898a00c3e8b8"
+    },
+    {
+      "path": "iclr_1/evidence/r18_completion/VALIDATION.md",
+      "sha256": "9f01507da4a7bcccea2c39e920669138b0b1d8c54709901147fd87689004105f"
+    }
+  ],
+  "bundle_script_sha256": "4ff80b5b04ce9581cb1086864018ce464ee5a5ee4e3f654b7ed3da6735f68857"
+}

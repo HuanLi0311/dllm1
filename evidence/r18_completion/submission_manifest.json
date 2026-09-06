@@ -1,0 +1,43 @@
+{
+  "schema_version": 1,
+  "status": "ok",
+  "scope": "R18 public scope-extension bundle; separate from the primary submission manifest",
+  "geometry_artifacts": [
+    {
+      "path": "iclr_1/runs/r18_completion_20260907/dense_1028/s0.json",
+      "sha256": "ccfb253bdaffae9dd7a71113ebd1ca850ba488c28b873180a44ba4fb714c95ee"
+    },
+    {
+      "path": "iclr_1/runs/r18_completion_20260907/dense_1028/s1.json",
+      "sha256": "7b30cdaa04e57865e8c337b2db0874b029d48863b1c831d7a18ec8075bfcb8be"
+    },
+    {
+      "path": "iclr_1/runs/r18_completion_20260907/dense_1028/s2.json",
+      "sha256": "80afe0a04c8669adbdac9ef1e25d1b46594c31f5686e7a453df14b4a71d90e4a"
+    },
+    {
+      "path": "iclr_1/runs/r18_completion_20260907/summary.json",
+      "sha256": "671c2ef2966fc20d460219dbd6127c0b1f7771b552585f551c91e042ad7dbe99"
+    }
+  ],
+  "probes": [
+    {
+      "path": "iclr_1/experiments/dllm_rank1_probe.py",
+      "sha256": "a3c08f89ea6dc6190686ae11175cc03c23cd59f97a67a13f2b72c66f5c39a84d"
+    },
+    {
+      "path": "iclr_1/experiments/summarize_r18_completion.py",
+      "sha256": "897d2646e1c0a833526e328acfe19ca6d7618492a70d01b0ed31898a00c3e8b8"
+    }
+  ],
+  "extra_artifacts": [
+    {
+      "path": "iclr_1/evidence/r18_completion/VALIDATION.md",
+      "sha256": "9f01507da4a7bcccea2c39e920669138b0b1d8c54709901147fd87689004105f"
+    }
+  ],
+  "dense_seed_count": 3,
+  "dense_cell_count": 18,
+  "reused_cross_text_envelopes": 6,
+  "reused_continual_envelopes": 33
+}
