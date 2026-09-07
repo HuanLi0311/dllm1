@@ -132,10 +132,12 @@ figures are ignored by Git because they are reproducible products.
 
 ```bash
 python experiments/build_review_bundle.py --verify evidence/release_manifest.json
+python experiments/build_review_bundle.py --verify evidence/r18_completion/release_manifest.json
 python experiments/build_comparison_contract.py --self-check
 ```
 
-The first command verifies all 25 compressed hashes and scans decompressed JSON
-for identity-bearing absolute paths. The checked-in comparison contract also
-recomputes rank-1 and diagonal errors from stored sufficient statistics when
-the figure script loads it.
+The first command verifies all 25 primary compressed hashes; the second verifies
+the separate appendix extension. Both scan decompressed JSON for identity-bearing
+absolute paths. The checked-in comparison contract also recomputes rank-1 and
+diagonal errors from stored sufficient statistics when the figure script loads
+it.
