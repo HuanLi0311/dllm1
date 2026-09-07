@@ -1,13 +1,15 @@
-# Split-sample rank-1 Fisher audit
+# When Is Rank-1 Fisher Geometry Faithful?
 
-Code and public evidence for **A Split-Sample Audit of Rank-1 Fisher Geometry
-in Masked Diffusion Language Models**.
+Code and public evidence for **When Is Rank-1 Fisher Geometry Faithful? An
+Empirical Audit in Masked Diffusion Language Models**.
 
 The project tests whether a mean-gradient rank-1 surrogate is a reliable
 approximation to empirical Fisher geometry when fitting and evaluation use
 disjoint gradient samples. It measures direct relative Frobenius error on
 selected SMDM-219M, SMDM-1.14B, and LLaDA-8B parameter slices. GSM8K supplies
-standardized text only; this is not a task-accuracy or downstream EWC study.
+standardized text only. A separately scoped appendix reanalyzes synthetic-fact
+continual-learning endpoints for context; it does not establish a causal link
+between reconstruction error and forgetting.
 
 ## Quick start
 
@@ -45,13 +47,16 @@ commands, and figure regeneration are in [REPRODUCING.md](REPRODUCING.md).
 
 ## Public evidence
 
-`evidence/raw/` contains the 25 accepted experiment envelopes as deterministic,
-identity-scrubbed JSON gzip files. No file exceeds GitHub's 100MB file limit.
-Verify every compressed-file hash and scan the decompressed content with:
+`evidence/raw/` contains the 25 accepted primary experiment envelopes as
+deterministic, anonymized JSON gzip files. No file exceeds GitHub's 100MB file
+limit. Verify every compressed-file hash and scan the decompressed content with:
 
 ```bash
 python experiments/build_review_bundle.py --verify evidence/release_manifest.json
 ```
+
+The separately validated appendix extension is under `evidence/r18_completion/`
+and has its own `release_manifest.json`.
 
 Local `runs/` outputs record exact machines and paths and are therefore ignored
 by Git except for the deterministic input data. Rebuild `evidence/` before a
@@ -59,7 +64,7 @@ release; never publish the local envelopes directly.
 
 ## Layout
 
-- `experiments/` — probes, controls, plots, and fail-closed verifiers.
+- `experiments/` — probes, controls, plots, and evidence verifiers.
 - `evidence/` — public compressed envelopes and their hash manifests.
 - `runs/data/` — deterministic token IDs used by the SMDM probes.
 - `SMDM/` — the Apache-2.0 upstream model code needed to load SMDM checkpoints.
