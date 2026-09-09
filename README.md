@@ -8,8 +8,8 @@ approximation to empirical Fisher geometry when fitting and evaluation use
 disjoint gradient samples. It measures direct relative Frobenius error on
 selected SMDM-219M, SMDM-1.14B, and LLaDA-8B parameter slices. GSM8K supplies
 standardized text only. A separately scoped appendix reanalyzes synthetic-fact
-continual-learning endpoints for context; it does not establish a causal link
-between reconstruction error and forgetting.
+continual-learning endpoints and a full-test GSM8K retention study for context;
+neither establishes a causal link between reconstruction error and forgetting.
 
 ## Quick start
 
@@ -33,6 +33,12 @@ for script in \
 do
   PYTHONNOUSERSITE=1 python "experiments/$script" --self-check
 done
+
+PYTHONNOUSERSITE=1 python continual_mdm.py --self-check
+PYTHONNOUSERSITE=1 python experiments/dllm_rank1_transfer.py --self-check
+PYTHONNOUSERSITE=1 python experiments/build_dolly_stream.py --self-check
+PYTHONNOUSERSITE=1 python experiments/smdm_gsm8k_rank1_benchmark.py --self-check
+PYTHONNOUSERSITE=1 python experiments/summarize_gsm8k_rank1_behavior.py --self-check
 ```
 
 LLaDA-8B needs a separate Python 3.10 environment because its model code uses a
@@ -44,6 +50,16 @@ python -m pip install -r requirements-llada.txt
 
 Checkpoints are intentionally excluded. Download instructions, complete probe
 commands, and figure regeneration are in [REPRODUCING.md](REPRODUCING.md).
+
+## GSM8K behavioral study
+
+The completed benchmark validates the released 1.14B GSM8K checkpoint, caches
+one shared learned Task-A state per seed, and compares four paired adaptation
+methods on all 1,319 test questions. Mean-rank-1 and diagonal EWC have matched
+implemented trace. The protocol and limitations are recorded in
+[`report/gsm8k_rank1_behavior_protocol.md`](report/gsm8k_rank1_behavior_protocol.md);
+the sanitized aggregates and interpretation are in
+[`report/gsm8k_rank1_behavior_results.md`](report/gsm8k_rank1_behavior_results.md).
 
 ## Public evidence
 
@@ -66,8 +82,13 @@ release; never publish the local envelopes directly.
 
 - `experiments/` — probes, controls, plots, and evidence verifiers.
 - `evidence/` — public compressed envelopes and their hash manifests.
-- `runs/data/` — deterministic token IDs used by the SMDM probes.
+- `runs/data/` — deterministic input subsets and token IDs used by the probes.
 - `SMDM/` — the Apache-2.0 upstream model code needed to load SMDM checkpoints.
+- `runs/data/gsm8k_rank1_behavior_results.json` — sanitized behavioral
+  aggregates and input hashes.
+- `report/gsm8k_rank1_behavior_protocol.md` — frozen behavioral protocol and
+  scale-screen boundary.
+- `report/gsm8k_rank1_behavior_results.md` — completed behavioral results.
 - `report/INVALIDATED_RESULTS.md` — reasons superseded pilots are excluded.
 
 ## License

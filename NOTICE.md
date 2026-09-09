@@ -17,9 +17,25 @@ fallbacks.
 
 ## GSM8K
 
-`SMDM/data/gsm8k/test.jsonl` and the derived token IDs in `runs/data/` come from
-OpenAI's [GSM8K repository](https://github.com/openai/grade-school-math), which
-is MIT licensed. Its license notice is retained in `SMDM/data/gsm8k/LICENSE`.
+`SMDM/data/gsm8k/train_no_aug.txt`, `SMDM/data/gsm8k/test.jsonl`, and the
+derived token IDs in `runs/data/` come from OpenAI's
+[GSM8K repository](https://github.com/openai/grade-school-math), which is MIT
+licensed. Its license notice is retained in `SMDM/data/gsm8k/LICENSE`.
+
+The optional, ignored `SMDM/data/gsm8k/train_augmented.txt` is downloaded from
+[`da03/implicit_chain_of_thought`](https://github.com/da03/implicit_chain_of_thought)
+to audit the released SMDM fine-tuning recipe. It is not redistributed here;
+review its upstream terms before sharing it.
+
+## Behavioral-pilot data and tokenizer
+
+`runs/data/dolly_natural_stream.jsonl` is a deterministic subset of
+`databricks/databricks-dolly-15k`, distributed under CC BY-SA 3.0. Its source
+revision and selection hashes are recorded in the adjacent manifest.
+
+`tokenizer/` contains the tokenizer configuration used by SMDM, obtained from
+`TinyLlama/TinyLlama-1.1B-intermediate-step-1431k-3T`; it retains the upstream
+terms.
 
 ## Model checkpoints
 

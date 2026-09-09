@@ -30,7 +30,11 @@ Weights are not included. With `huggingface-hub` installed:
 ```bash
 hf download nieshen/SMDM \
   mdm_safetensors/mdm-170M-100e18.safetensors \
+  mdm_safetensors/mdm-336M-100e18.safetensors \
+  mdm_safetensors/mdm-472M-100e18.safetensors \
+  mdm_safetensors/mdm-1028M-100e18.safetensors \
   mdm_safetensors/mdm-1028M-1600e18.safetensors \
+  gsm8k_safetensors/mdm-1028M-3300e18-rsl-gsm8k.safetensors \
   --local-dir checkpoints
 
 hf download GSAI-ML/LLaDA-8B-Base \
@@ -40,7 +44,11 @@ hf download GSAI-ML/LLaDA-8B-Base \
 Expected SHA-256 values are:
 
 - SMDM-219M: `2d8c9b9a730715f2c772d5bc740e12951fc160e5e8511a16835f3537401ea9bb`
-- SMDM-1.14B: `ce96ce67a051613b6d7feb419c99c0b4db5bfcfaaa0833ed7f7ecbc6632841d6`
+- SMDM-401M (`100e18`): `3cd6ec869fc29be1943d0ab2e74f47b59b28d40a2f22314021d60e8ccbb031b2`
+- SMDM-554M (`100e18`): `aa672982e20eecb5fd850b3e22053846638cbc65b73a06e304da6588deb6799d`
+- SMDM-1.14B (`100e18`): `ed7d52165307e231c3d1882566512d93a6fbf35f8487aa9593a2c6e795964ec6`
+- SMDM-1.14B (`1600e18`): `ce96ce67a051613b6d7feb419c99c0b4db5bfcfaaa0833ed7f7ecbc6632841d6`
+- SMDM-1.14B GSM8K SFT: `1e968c26419d5b041adf3b1825e6d2b10887c45cdab76e60ea2d8341df31618f`
 - LLaDA-8B aggregate: `b84552bd96af3dc51fb9782085672269e95c1e4fe1eebd2a901863a8739a1b95`
 
 The LLaDA aggregate hashes the model index, configuration, remote model code,
@@ -89,6 +97,69 @@ python experiments/llada_geometry_probe.py \
 
 Every successful envelope records its full command, software versions, source
 hashes, checkpoint hashes, selected data, configuration, and direct metrics.
+
+## GSM8K behavioral study
+
+Read `report/gsm8k_rank1_behavior_protocol.md` before rerunning the study. The
+runner first evaluates the released GSM8K checkpoint with the upstream
+two-pass decoder, then prepares one shared state/Fisher/replay cache without
+retraining Task A, and finally starts every paired method from that cache:
+
+```bash
+python experiments/smdm_gsm8k_rank1_benchmark.py --self-check
+
+python experiments/smdm_gsm8k_rank1_benchmark.py \
+  --mode evaluate --model 1028 \
+  --checkpoint checkpoints/gsm8k_safetensors/mdm-1028M-3300e18-rsl-gsm8k.safetensors \
+  --output runs/gsm8k_rank1_scale/released_sft_eval.json
+
+python experiments/smdm_gsm8k_rank1_benchmark.py \
+  --mode prepare --model 1028 --a-steps 0 \
+  --checkpoint checkpoints/gsm8k_safetensors/mdm-1028M-3300e18-rsl-gsm8k.safetensors \
+  --gsm-train SMDM/data/gsm8k/train_augmented.txt \
+  --cache-prefix runs/gsm8k_rank1_scale/cache/m1028_gsm_s3407
+
+python experiments/smdm_gsm8k_rank1_benchmark.py \
+  --mode adapt --model 1028 --a-steps 0 \
+  --checkpoint checkpoints/gsm8k_safetensors/mdm-1028M-3300e18-rsl-gsm8k.safetensors \
+  --gsm-train SMDM/data/gsm8k/train_augmented.txt \
+  --cache-prefix runs/gsm8k_rank1_scale/cache/m1028_gsm_s3407 \
+  --method rank1_gd \
+  --output runs/gsm8k_rank1_scale/pilot/m1028_rank1_gd_s3407.json
+```
+
+The released SMDM recipe uses the Git-LFS `data/gsm8k/train.txt` from
+`da03/implicit_chain_of_thought`: 384,620 problems become 769,240 conditional
+training instances and are trained for 40 epochs. Download it only when
+auditing or reproducing upstream SFT; it is intentionally ignored rather than
+redistributed by this repository:
+
+```bash
+curl -L --fail \
+  -o SMDM/data/gsm8k/train_augmented.txt \
+  https://media.githubusercontent.com/media/da03/implicit_chain_of_thought/main/data/gsm8k/train.txt
+sha256sum SMDM/data/gsm8k/train_augmented.txt
+```
+
+The expected hash is
+`6f9a20bc1476ca65eee9bc5117c2d0582b1f1733d5148ffc0ff29cad2a9e9c6b`.
+The commands above illustrate the runner API, not every completed matrix cell. All
+preparation-affecting flags must be identical between `prepare` and `adapt`;
+the cache rejects drift.
+
+After all 12 full-test endpoints plus the prespecified sensitivity, ablation,
+and audit cells have finished, build the sanitized aggregate and the appendix
+table without publishing local envelopes:
+
+```bash
+python experiments/summarize_gsm8k_rank1_behavior.py \
+  --tex-table ../assets/iclr_1/inputs/gsm8k_behavior_table.tex
+```
+
+The summarizer rejects missing or non-1,319-question full endpoints. It writes
+`runs/data/gsm8k_rank1_behavior_results.json` and
+`report/gsm8k_rank1_behavior_results.md`; the former contains hashes of every
+consumed private envelope but no machine paths.
 
 ## Null and figures
 
