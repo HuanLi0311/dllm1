@@ -234,7 +234,7 @@ def main(argv=None) -> int:
             "status": "failed",
             "error": {"type": type(exc).__name__, "message": str(exc), "traceback": traceback.format_exc()},
         }
-        if args.output:
+        if args.output and not args.output.exists():
             args.output.parent.mkdir(parents=True, exist_ok=True)
             args.output.write_text(json.dumps(failure, indent=2) + "\n")
         print(json.dumps(failure, indent=2), flush=True)
