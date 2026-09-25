@@ -6,6 +6,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import math
 import random
 import sys
 import traceback
@@ -55,17 +56,33 @@ def _read_selected(path: Path, split: str, calibration_count: int, calibration_s
     return calibration, test
 
 
-def _prefix_metrics(base_split, calibration_gradients, test_gradients, calibration_losses, test_losses):
+def _prefix_metrics(calibration_gradients, test_gradients):
+    calibration = torch.stack(calibration_gradients).to(dtype=torch.float64)
+    calibration_mean = calibration.mean(dim=0)
+    calibration_diagonal = torch.mean(calibration.square(), dim=0)
+    mean_norm_sq = torch.dot(calibration_mean, calibration_mean)
+    mean_quadratic = torch.mean((calibration @ calibration_mean).square())
+    epsilon = torch.tensor(1e-30, dtype=torch.float64)
+    coefficient = mean_quadratic / torch.clamp(mean_norm_sq.square(), min=epsilon)
     rows = []
     for count in PREFIXES:
-        metric = base_split(
-            calibration_gradients,
-            test_gradients[:count],
-            calibration_losses,
-            test_losses[:count],
+        test = torch.stack(test_gradients[:count]).to(dtype=torch.float64)
+        test_gram = (test @ test.T) / count
+        fisher_norm_sq = torch.sum(test_gram.square())
+        fisher_norm = torch.sqrt(torch.clamp(fisher_norm_sq, min=epsilon))
+        rank1_inner = coefficient * torch.mean((test @ calibration_mean).square())
+        rank1_norm_sq = coefficient.square() * mean_norm_sq.square()
+        rank1 = float(
+            torch.sqrt(torch.clamp(fisher_norm_sq - 2 * rank1_inner + rank1_norm_sq, min=0))
+            / fisher_norm
         )
-        rank1 = metric["mean_rank1_test_relative_frobenius_error"]
-        diagonal = metric["diagonal_test_relative_frobenius_error"]
+        test_diagonal = torch.mean(test.square(), dim=0)
+        diagonal_inner = torch.dot(calibration_diagonal, test_diagonal)
+        diagonal_norm_sq = torch.dot(calibration_diagonal, calibration_diagonal)
+        diagonal = float(
+            torch.sqrt(torch.clamp(fisher_norm_sq - 2 * diagonal_inner + diagonal_norm_sq, min=0))
+            / fisher_norm
+        )
         rows.append({
             "test_sample_count": count,
             "rank1_test_relative_frobenius_error": rank1,
@@ -113,17 +130,15 @@ def run(args) -> dict:
         return torch.cat((calibration_masks, test_masks))
 
     def nested_metrics(calibration_gradients, test_gradients, calibration_losses, test_losses):
-        metric = base_split_metrics(
-            calibration_gradients, test_gradients, calibration_losses, test_losses
-        )
-        metric["test_prefix_results"] = _prefix_metrics(
-            base_split_metrics,
-            calibration_gradients,
-            test_gradients,
-            calibration_losses,
-            test_losses,
-        )
-        return metric
+        prefixes = _prefix_metrics(calibration_gradients, test_gradients)
+        return {
+            "calibration_sample_count": len(calibration_gradients),
+            "test_sample_count": len(test_gradients),
+            "slice_numel": calibration_gradients[0].numel(),
+            "mean_rank1_test_relative_frobenius_error": prefixes[-1]["rank1_test_relative_frobenius_error"],
+            "diagonal_test_relative_frobenius_error": prefixes[-1]["diagonal_test_relative_frobenius_error"],
+            "test_prefix_results": prefixes,
+        }
 
     run_args = SimpleNamespace(
         checkpoint=str(args.checkpoint),
@@ -184,9 +199,22 @@ def run(args) -> dict:
 def _self_check() -> None:
     calibration = [torch.tensor([1.0, 0.0]), torch.tensor([0.0, 1.0])]
     test = [torch.tensor([1.0 + index / 1000, 1.0]) for index in range(256)]
-    rows = _prefix_metrics(probe._split_metrics, calibration, test, [1.0, 1.0], [1.0] * 256)
+    rows = _prefix_metrics(calibration, test)
     assert [row["test_sample_count"] for row in rows] == list(PREFIXES)
     assert all(row["winner"] in {"rank1", "diagonal", "tie"} for row in rows)
+    for row in rows:
+        count = row["test_sample_count"]
+        expected = probe._split_metrics(calibration, test[:count], [1.0, 1.0], [1.0] * count)
+        assert math.isclose(
+            row["rank1_test_relative_frobenius_error"],
+            expected["mean_rank1_test_relative_frobenius_error"],
+            rel_tol=1e-12,
+        )
+        assert math.isclose(
+            row["diagonal_test_relative_frobenius_error"],
+            expected["diagonal_test_relative_frobenius_error"],
+            rel_tol=1e-12,
+        )
     print(json.dumps({"self_check": "ok"}))
 
 
