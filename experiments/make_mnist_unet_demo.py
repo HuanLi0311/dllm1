@@ -60,12 +60,8 @@ def _render(models, example, output_stem: Path, device) -> None:
     matplotlib.use("Agg")
     import matplotlib.pyplot as plt
     import torch
-    from matplotlib import font_manager
-
-    for font in Path("/usr/share/fonts/opentype/urw-base35").glob("NimbusRoman-*.otf"):
-        font_manager.fontManager.addfont(str(font))
     plt.rcParams.update({
-        "font.family": "Nimbus Roman",
+        "font.family": "DejaVu Sans",
         "font.size": 7.5,
         "text.color": "#26313B",
         "axes.labelcolor": "#26313B",
