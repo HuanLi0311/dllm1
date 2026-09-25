@@ -33,7 +33,7 @@
   "extra_artifacts": [
     {
       "path": "iclr_1/evidence/r19_mnist_unet/VALIDATION.md",
-      "sha256": "601fdc53a66ccdf5f1b49b6641ace1ee557fced9fd6b55bb952bbf42c02f6fe1"
+      "sha256": "6cd6083970117810cec8444a058cff02ab28ee44cba3a45ed64a40bacff5a8b2"
     }
   ],
   "training_seed_count": 3,

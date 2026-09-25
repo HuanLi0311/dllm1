@@ -3,7 +3,7 @@
   "status": "ok",
   "submission_manifest": {
     "path": "evidence/r19_mnist_unet/submission_manifest.json",
-    "sha256": "803ca944785911a596850116bc4e51d9be76e9f3fef2e9e99238d23319197184"
+    "sha256": "e5f4d82b1480d520a05667b911888c005bc85587c9235c7caed251a652c77a67"
   },
   "raw_artifacts": [
     {
@@ -41,12 +41,8 @@
       "sha256": "5f1fe03dfa6932f6a6f86cfcb3c63a92c2625ca1fee841c9bc8ed922fe18b819"
     },
     {
-      "path": "iclr_1/experiments/make_mnist_unet_demo.py",
-      "sha256": "6af43d2281d45a6a7d498e7b9862384b06e277dab98461986d1adcac31658684"
-    },
-    {
       "path": "iclr_1/evidence/r19_mnist_unet/VALIDATION.md",
-      "sha256": "601fdc53a66ccdf5f1b49b6641ace1ee557fced9fd6b55bb952bbf42c02f6fe1"
+      "sha256": "6cd6083970117810cec8444a058cff02ab28ee44cba3a45ed64a40bacff5a8b2"
     }
   ],
   "bundle_script_sha256": "4ff80b5b04ce9581cb1086864018ce464ee5a5ee4e3f654b7ed3da6735f68857"
