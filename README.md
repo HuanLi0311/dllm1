@@ -6,10 +6,12 @@ Empirical Audit in Masked Diffusion Language Models**.
 The project tests whether a mean-gradient rank-1 surrogate is a reliable
 approximation to empirical Fisher geometry when fitting and evaluation use
 disjoint gradient samples. It measures direct relative Frobenius error on
-selected SMDM-219M, SMDM-1.14B, and LLaDA-8B parameter slices. GSM8K supplies
-standardized text only. A separately scoped appendix reanalyzes synthetic-fact
-continual-learning endpoints and a full-test GSM8K retention study for context;
-neither establishes a causal link between reconstruction error and forgetting.
+selected SMDM-219M, SMDM-1.14B, and LLaDA-8B parameter slices. A source-setting
+control applies the same split-sample criterion to the small MNIST UNet from
+Wang et al. (2026). GSM8K supplies standardized text only. A separately scoped
+appendix reanalyzes synthetic-fact continual-learning endpoints and a full-test
+GSM8K retention study for context; neither establishes a causal link between
+reconstruction error and forgetting.
 
 ## Quick start
 
@@ -23,6 +25,7 @@ python -m pip install -r requirements.txt
 
 for script in \
   simulate_fisher_null.py \
+  mnist_unet_fisher_audit.py \
   dllm_rank1_probe.py \
   llada_geometry_probe.py \
   run_audited_geometry_probe.py \
@@ -50,6 +53,17 @@ python -m pip install -r requirements-llada.txt
 
 Checkpoints are intentionally excluded. Download instructions, complete probe
 commands, and figure regeneration are in [REPRODUCING.md](REPRODUCING.md).
+
+## MNIST UNet source-setting control
+
+`experiments/mnist_unet_fisher_audit.py` reuses the official `small-big` UNet
+at `third_party/iclr2026-rank1-fisher` (commit `c7577f2`). Each of three model
+seeds is trained for 200 epochs on MNIST, after which rank-1 and diagonal
+surrogates are fitted to 1,024 test-split gradients and scored both on that
+calibration sample and on 1,024 disjoint examples and noise draws. The fixed
+timestep grid is `100,200,...,900`; no continual-learning or FID result is
+recomputed. `experiments/summarize_mnist_unet_fisher.py` rejects incomplete
+seed/timestep grids and generates the two-panel calibration/held-out figure.
 
 ## GSM8K behavioral study
 
