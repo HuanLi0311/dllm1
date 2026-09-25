@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import gzip
 import hashlib
 import json
 import math
@@ -13,6 +14,14 @@ from pathlib import Path
 
 EXPECTED_SEEDS = (0, 1, 2)
 EXPECTED_TIMESTEPS = tuple(range(100, 1000, 100))
+EXPECTED_SOURCE_COMMIT = "c7577f22551941e4bf58e33405fc78e8fcb608aa"
+EXPECTED_MODEL = {
+    "architecture": "source-paper-small-big-unet",
+    "parameter_count": 152497,
+    "training_epochs": 200,
+    "training_batch_size": 128,
+    "training_learning_rate": 0.0002,
+}
 METRICS = (
     "calibration_rank1_error",
     "calibration_diagonal_error",
@@ -38,8 +47,15 @@ def _mean_sd(values) -> dict:
     }
 
 
+def _read_json(path: Path) -> dict:
+    if path.suffix == ".gz":
+        with gzip.open(path, "rt", encoding="utf-8") as handle:
+            return json.load(handle)
+    return json.loads(path.read_text(encoding="utf-8"))
+
+
 def _load(paths: list[Path]) -> tuple[list[dict], list[dict]]:
-    payloads = [json.loads(path.read_text(encoding="utf-8")) for path in paths]
+    payloads = [_read_json(path) for path in paths]
     if len(payloads) != len(EXPECTED_SEEDS):
         raise ValueError(f"expected three audit files, received {len(payloads)}")
     by_seed = {payload["seed"]: payload for payload in payloads}
@@ -51,6 +67,14 @@ def _load(paths: list[Path]) -> tuple[list[dict], list[dict]]:
         payload = by_seed[seed]
         if payload.get("status") != "ok":
             raise ValueError(f"seed {seed} is not successful")
+        if payload.get("dataset") != "MNIST-test":
+            raise ValueError(f"seed {seed} uses the wrong dataset")
+        if payload.get("calibration_count") != 1024 or payload.get("test_count") != 1024:
+            raise ValueError(f"seed {seed} uses the wrong split sizes")
+        if any(payload.get("model", {}).get(key) != value for key, value in EXPECTED_MODEL.items()):
+            raise ValueError(f"seed {seed} uses the wrong model or training protocol")
+        if payload.get("source", {}).get("commit") != EXPECTED_SOURCE_COMMIT:
+            raise ValueError(f"seed {seed} uses the wrong source commit")
         for key in ("dataset", "calibration_count", "test_count"):
             if payload[key] != reference[key]:
                 raise ValueError(f"seed {seed} mismatches {key}")
