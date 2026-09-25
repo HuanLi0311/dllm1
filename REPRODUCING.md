@@ -95,7 +95,11 @@ After all three envelopes finish:
 python experiments/summarize_mnist_unet_fisher.py \
   runs/r19_mnist_unet_heldout/seed_{0,1,2}/audit.json \
   --summary runs/r19_mnist_unet_heldout/summary.json \
-  --figure-stem ../assets/iclr_1/figures/mnist_unet_fisher
+  --figure-stem ../assets/iclr_1/figures/mnist_unet_fisher \
+  --table ../assets/iclr_1/inputs/mnist_unet_fisher_table.tex
+
+python experiments/make_mnist_unet_demo.py --self-check
+python experiments/make_mnist_unet_demo.py
 ```
 
 ## Probe examples
@@ -253,7 +257,8 @@ python experiments/build_review_bundle.py --verify evidence/r19_mnist_unet/relea
 python experiments/summarize_mnist_unet_fisher.py \
   evidence/r19_mnist_unet/raw/runs/r19_mnist_unet_heldout/seed_*/audit.json.gz \
   --summary /tmp/r19_mnist_unet_summary.json \
-  --figure-stem /tmp/r19_mnist_unet_fisher
+  --figure-stem /tmp/r19_mnist_unet_fisher \
+  --table /tmp/r19_mnist_unet_table.tex
 python experiments/build_comparison_contract.py --self-check
 ```
 

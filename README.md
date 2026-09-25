@@ -63,7 +63,10 @@ surrogates are fitted to 1,024 test-split gradients and scored both on that
 calibration sample and on 1,024 disjoint examples and noise draws. The fixed
 timestep grid is `100,200,...,900`; no continual-learning or FID result is
 recomputed. `experiments/summarize_mnist_unet_fisher.py` rejects incomplete
-seed/timestep grids and generates the two-panel calibration/held-out figure.
+seed/timestep grids and generates the held-out table and two-panel
+calibration/held-out figure. `experiments/make_mnist_unet_demo.py` verifies the
+recorded checkpoint hashes before producing the qualitative sampling and
+one-step reconstruction check.
 
 ## GSM8K behavioral study
 
