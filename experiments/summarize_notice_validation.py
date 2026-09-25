@@ -61,7 +61,7 @@ def _convergence(directory: Path, expected: int):
     if len(calibration_records) != 1 or len(calibration_masks) != 1:
         raise ValueError(f"{directory}: calibration surrogate changed across test seeds")
     if len(test_records) != expected or len(test_masks) != expected:
-        raise ValueError(f"{directory}: test records/masks are not independent across seeds")
+        raise ValueError(f"{directory}: test order/masks do not differ across seeds")
 
     by_prefix, by_cell = defaultdict(list), defaultdict(list)
     thresholds = []
@@ -118,7 +118,7 @@ def _convergence(directory: Path, expected: int):
         "test_seed_count": expected,
         "cell_count": len(reference_cells),
         "fixed_calibration_verified": True,
-        "independent_test_records_and_masks_verified": True,
+        "distinct_test_order_and_masks_verified": True,
         "aggregate": aggregate,
         "aggregate_ranking_stable_from_nt": aggregate_threshold,
         "cell_seed_stability_threshold_counts": dict(sorted(Counter(thresholds).items())),
