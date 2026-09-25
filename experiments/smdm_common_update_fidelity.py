@@ -5,7 +5,6 @@ from __future__ import annotations
 
 import argparse
 import gc
-import hashlib
 import json
 import math
 import random
@@ -145,6 +144,9 @@ def run(args) -> dict:
         bench.load_model = base_load_model
         args.output = actual_output
     model = captured["adapted"]
+    model.zero_grad(set_to_none=True)
+    gc.collect()
+    torch.cuda.empty_cache()
     tokenizer = bench._load_tokenizer(args)
     pad_id = int(tokenizer.eos_token_id)
     heldout, heldout_source_indices = _heldout_rows(
@@ -242,7 +244,7 @@ def run(args) -> dict:
             & set(prepare_summary["gsm_fisher_source_indices"]),
             "heldout_excludes_replay": not set(heldout_source_indices)
             & set(replay_payload["manifest"]["source_indices"]),
-            "base_and_final_loss_max_mask_replay_difference": 0.0,
+            "base_and_final_loss_masks": "same generator seed and row order",
         },
     })
     if not adaptation["audit"]["heldout_excludes_fisher"] or not adaptation["audit"]["heldout_excludes_replay"]:
