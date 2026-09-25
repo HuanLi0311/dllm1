@@ -197,7 +197,7 @@ def _plot(rows: list[dict], output_stem: Path) -> None:
 
 def _write_table(rows: list[dict], output: Path) -> None:
     lines = [
-        r"\begin{table*}[t]",
+        r"\begin{table}[!ht]",
         r"\centering",
         r"\caption{MNIST UNet held-out relative Frobenius error.  Values are mean$\pm$sample SD over three independent training seeds; the final column counts seeds with lower rank-1 than diagonal error.}",
         r"\label{tab:mnist-unet-heldout}",
@@ -220,7 +220,7 @@ def _write_table(rows: list[dict], output: Path) -> None:
             f'${oracle["mean"]:.4f}\\pm{oracle["sample_sd"]:.4f}$ & '
             f'{wins}/3 \\\\'
         )
-    lines.extend([r"\bottomrule", r"\end{tabular*}", r"\end{table*}"])
+    lines.extend([r"\bottomrule", r"\end{tabular*}", r"\end{table}"])
     output.parent.mkdir(parents=True, exist_ok=True)
     output.write_text("\n".join(lines) + "\n", encoding="utf-8")
 
