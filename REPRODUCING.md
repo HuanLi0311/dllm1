@@ -248,6 +248,12 @@ figures are ignored by Git because they are reproducible products.
 ```bash
 python experiments/build_review_bundle.py --verify evidence/release_manifest.json
 python experiments/build_review_bundle.py --verify evidence/r18_completion/release_manifest.json
+python experiments/build_review_bundle.py --verify evidence/r19_mnist_unet/release_manifest.json
+
+python experiments/summarize_mnist_unet_fisher.py \
+  evidence/r19_mnist_unet/raw/runs/r19_mnist_unet_heldout/seed_*/audit.json.gz \
+  --summary /tmp/r19_mnist_unet_summary.json \
+  --figure-stem /tmp/r19_mnist_unet_fisher
 python experiments/build_comparison_contract.py --self-check
 ```
 

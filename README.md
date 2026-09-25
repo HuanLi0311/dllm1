@@ -85,8 +85,9 @@ limit. Verify every compressed-file hash and scan the decompressed content with:
 python experiments/build_review_bundle.py --verify evidence/release_manifest.json
 ```
 
-The separately validated appendix extension is under `evidence/r18_completion/`
-and has its own `release_manifest.json`.
+The separately validated appendix extensions are under
+`evidence/r18_completion/` and `evidence/r19_mnist_unet/`; each has its own
+`release_manifest.json` and remains outside the primary manifest.
 
 Local `runs/` outputs record exact machines and paths and are therefore ignored
 by Git except for the deterministic input data. Rebuild `evidence/` before a
