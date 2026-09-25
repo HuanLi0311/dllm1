@@ -165,7 +165,6 @@ def run(args):
             "test_mask_sha256": _tensor_hash(test_masks),
         })
         gradients = {name: [] for name in parameter_names}
-        losses = []
         for index, clean in enumerate(ids):
             noisy = clean.clone()
             noisy[masks[index]] = model.config.mask_token_id
@@ -181,7 +180,6 @@ def run(args):
                 raise FloatingPointError(f"non-finite value at p={probability:g}")
             for name, gradient in zip(parameter_names, example_gradients):
                 gradients[name].append(gradient.detach().float().cpu().reshape(-1))
-            losses.append(float(loss.detach().cpu()))
             del logits, loss, example_gradients
         for name in parameter_names:
             results.append({
