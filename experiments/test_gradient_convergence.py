@@ -93,6 +93,18 @@ def _prefix_metrics(calibration_gradients, test_gradients):
     return rows
 
 
+def _paper_calibration_masks(sample_masks, model_size, probabilities, count, length, device, seed):
+    required = 256 if model_size == 170 else 128
+    generator = torch.Generator(device=device).manual_seed(seed)
+    # The accepted SMDM probe draws this unused tensor before sampling masks.
+    torch.rand((required, length), device=device, generator=generator)
+    rows = []
+    for probability in probabilities:
+        values = torch.full((required,), probability, device=device)
+        rows.append(sample_masks(values, length, device, generator)[:count])
+    return rows
+
+
 def run(args) -> dict:
     calibration, test = _read_selected(
         args.data, args.split, args.calibration_samples, args.calibration_seed, args.test_seed
@@ -103,28 +115,27 @@ def run(args) -> dict:
     base_split_metrics = probe._split_metrics
     mask_audit = []
     condition_index = 0
-    calibration_generator = None
+    calibration_masks_by_condition = None
 
     def fixed_records(*_unused, **_unused_kw):
         return [row["input_ids"] for row in selected]
 
     def independent_masks(probabilities, length, device, _generator):
-        nonlocal calibration_generator, condition_index
-        paper_required = 256 if args.model_size == 170 else 128
-        if calibration_generator is None:
-            calibration_generator = torch.Generator(device=device).manual_seed(args.calibration_seed)
-            # The accepted SMDM probe draws this unused tensor before masks.
-            torch.rand((paper_required, length), device=device, generator=calibration_generator)
-        paper_probabilities = torch.full(
-            (paper_required,), float(probabilities[0]), device=device
-        )
-        paper_masks = base_sample_masks(
-            paper_probabilities, length, device, calibration_generator
-        )
+        nonlocal calibration_masks_by_condition, condition_index
+        if calibration_masks_by_condition is None:
+            calibration_masks_by_condition = _paper_calibration_masks(
+                base_sample_masks,
+                args.model_size,
+                probe._parse_floats(args.mask_probabilities),
+                args.calibration_samples,
+                length,
+                device,
+                args.calibration_seed,
+            )
         test_generator = torch.Generator(device=device).manual_seed(
             args.test_seed + 100_003 * condition_index
         )
-        calibration_masks = paper_masks[: args.calibration_samples]
+        calibration_masks = calibration_masks_by_condition[condition_index]
         test_masks = base_sample_masks(
             probabilities[args.calibration_samples :], length, device, test_generator
         )
@@ -223,6 +234,11 @@ def _self_check() -> None:
             expected["diagonal_test_relative_frobenius_error"],
             rel_tol=1e-12,
         )
+    masks1 = _paper_calibration_masks(probe._sample_masks, 170, [0.1, 0.5], 4, 8, "cpu", 0)
+    masks2 = _paper_calibration_masks(probe._sample_masks, 170, [0.1, 0.5], 4, 8, "cpu", 0)
+    assert [_tensor_hash(mask) for mask in masks1] == [_tensor_hash(mask) for mask in masks2]
+    masks3 = _paper_calibration_masks(probe._sample_masks, 1028, [0.1, 0.5], 4, 8, "cpu", 0)
+    assert _tensor_hash(masks1[0]) != _tensor_hash(masks3[0])
     print(json.dumps({"self_check": "ok"}))
 
 

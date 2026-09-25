@@ -101,6 +101,17 @@ def _prefix_rows(calibration_gradients, test_gradients):
     return rows
 
 
+def _paper_calibration_masks(sample_masks, probabilities, count, length, device, seed):
+    import torch
+
+    generator = torch.Generator(device=device).manual_seed(seed)
+    rows = []
+    for probability in probabilities:
+        values = torch.full((128,), probability, device=device)
+        rows.append(sample_masks(values, length, device, generator)[:count])
+    return rows
+
+
 def run(args):
     import torch
     import torch.nn.functional as F
@@ -138,20 +149,21 @@ def run(args):
     targets = [named[name].requires_grad_(True) for name in parameter_names]
 
     results, mask_audit = [], []
-    for condition_index, probability in enumerate(base._parse_floats(args.mask_probabilities)):
+    configured_probabilities = base._parse_floats(args.mask_probabilities)
+    calibration_masks_by_condition = _paper_calibration_masks(
+        base._sample_masks,
+        configured_probabilities,
+        args.calibration_samples,
+        args.sequence_length,
+        device,
+        args.calibration_seed,
+    )
+    for condition_index, probability in enumerate(configured_probabilities):
         probabilities = torch.full((len(selected),), probability, device=device)
-        calibration_generator = torch.Generator(device=device).manual_seed(
-            args.calibration_seed + 100_003 * condition_index
-        )
         test_generator = torch.Generator(device=device).manual_seed(
             args.test_seed + 100_003 * condition_index
         )
-        calibration_masks = base._sample_masks(
-            probabilities[: args.calibration_samples],
-            args.sequence_length,
-            device,
-            calibration_generator,
-        )
+        calibration_masks = calibration_masks_by_condition[condition_index]
         test_masks = base._sample_masks(
             probabilities[args.calibration_samples :],
             args.sequence_length,
@@ -234,6 +246,7 @@ def run(args):
         "config": {key: str(value) if isinstance(value, Path) else value for key, value in vars(args).items()},
         "convergence_design": {
             "test_prefixes": list(PREFIXES),
+            "calibration_mask_protocol": "replay accepted seed-0 primary probe RNG stream",
             "calibration_records": manifest(calibration),
             "test_records": manifest(test),
             "calibration_records_sha256": _json_hash(manifest(calibration)),
@@ -263,6 +276,9 @@ def _self_check():
             row["diagonal_test_relative_frobenius_error"]
             - expected["diagonal_test_relative_frobenius_error"]
         ) < 1e-12
+    masks1 = _paper_calibration_masks(base._sample_masks, [0.1, 0.5], 4, 8, "cpu", 0)
+    masks2 = _paper_calibration_masks(base._sample_masks, [0.1, 0.5], 4, 8, "cpu", 0)
+    assert [_tensor_hash(mask) for mask in masks1] == [_tensor_hash(mask) for mask in masks2]
     print(json.dumps({"self_check": "ok"}))
 
 
