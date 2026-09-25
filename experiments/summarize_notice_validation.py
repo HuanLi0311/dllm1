@@ -63,10 +63,10 @@ def _convergence(directory: Path, expected: int):
     if len(test_records) != expected or len(test_masks) != expected:
         raise ValueError(f"{directory}: test order/masks do not differ across seeds")
 
-    by_prefix, by_cell = defaultdict(list), defaultdict(list)
+    by_prefix, by_cell, by_seed_prefix = defaultdict(list), defaultdict(list), defaultdict(list)
     thresholds = []
     reference_cells = None
-    for payload in payloads:
+    for seed_index, payload in enumerate(payloads):
         cells = {(row["parameter"], row["mask_condition"]) for row in payload["results"]}
         if reference_cells is None:
             reference_cells = cells
@@ -81,19 +81,39 @@ def _convergence(directory: Path, expected: int):
             for row in prefix_rows:
                 by_prefix[row["test_sample_count"]].append(row)
                 by_cell[cell, row["test_sample_count"]].append(row)
+                by_seed_prefix[seed_index, row["test_sample_count"]].append(row)
 
     aggregate = []
     for count in PREFIXES:
         rows = by_prefix[count]
-        rank1 = [row["rank1_test_relative_frobenius_error"] for row in rows]
-        diagonal = [row["diagonal_test_relative_frobenius_error"] for row in rows]
-        margins = [row["paired_margin_diagonal_minus_rank1"] for row in rows]
+        rank1 = [
+            statistics.fmean(
+                row["rank1_test_relative_frobenius_error"]
+                for row in by_seed_prefix[seed_index, count]
+            )
+            for seed_index in range(expected)
+        ]
+        diagonal = [
+            statistics.fmean(
+                row["diagonal_test_relative_frobenius_error"]
+                for row in by_seed_prefix[seed_index, count]
+            )
+            for seed_index in range(expected)
+        ]
+        margins = [
+            statistics.fmean(
+                row["paired_margin_diagonal_minus_rank1"]
+                for row in by_seed_prefix[seed_index, count]
+            )
+            for seed_index in range(expected)
+        ]
+        cell_margins = [row["paired_margin_diagonal_minus_rank1"] for row in rows]
         aggregate.append({
             "test_sample_count": count,
             "rank1": _mean_std(rank1),
             "diagonal": _mean_std(diagonal),
             "paired_margin_diagonal_minus_rank1": _mean_std(margins),
-            "rank1_win_fraction": sum(value > 0 for value in margins) / len(margins),
+            "rank1_win_fraction": sum(value > 0 for value in cell_margins) / len(cell_margins),
             "cell_seed_count": len(rows),
             "aggregate_winner": "rank1" if statistics.fmean(margins) > 0 else "diagonal",
         })
