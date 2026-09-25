@@ -97,9 +97,6 @@ python experiments/summarize_mnist_unet_fisher.py \
   --summary runs/r19_mnist_unet_heldout/summary.json \
   --figure-stem ../assets/iclr_1/figures/mnist_unet_fisher \
   --table ../assets/iclr_1/inputs/mnist_unet_fisher_table.tex
-
-python experiments/make_mnist_unet_demo.py --self-check
-python experiments/make_mnist_unet_demo.py
 ```
 
 ## Probe examples

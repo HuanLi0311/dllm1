@@ -22,8 +22,7 @@ Validation requires:
 - disjoint calibration and test indices in every seed;
 - finite rank-1, diagonal, and oracle errors, with the oracle no worse than
   the fitted rank-1 estimator; and
-- exact hashes for the audits, summary, probe, summarizer, qualitative-figure
-  script, and this report.
+- exact hashes for the audits, summary, probe, summarizer, and this report.
 
 Rank-1 has lower held-out relative Frobenius error than diagonal in 26/27
 seed--timestep cells. Averaged equally over the grid, the errors are 0.644 for
@@ -44,10 +43,4 @@ PYTHONNOUSERSITE=1 python iclr_1/experiments/summarize_mnist_unet_fisher.py \
   --summary /tmp/r19_mnist_unet_summary.json \
   --figure-stem /tmp/r19_mnist_unet_fisher \
   --table /tmp/r19_mnist_unet_table.tex
-
-PYTHONNOUSERSITE=1 python iclr_1/experiments/make_mnist_unet_demo.py --self-check
 ```
-
-Regenerating the qualitative figure additionally requires the three trained
-checkpoints. Its script verifies each checkpoint against the hash recorded in
-the corresponding audit before sampling.
