@@ -54,6 +54,50 @@ Expected SHA-256 values are:
 The LLaDA aggregate hashes the model index, configuration, remote model code,
 and all weight shards; individual hashes are stored in each public envelope.
 
+## MNIST UNet source-setting control
+
+Clone the source paper's official implementation at the recorded commit and
+install PyTorch, torchvision, and diffusers in a separate environment. The
+reported runs used Python 3.10, PyTorch 2.7.0+cu128, torchvision 0.22.0+cu128,
+and diffusers 0.37.0.dev0 on an A100 40GB:
+
+```bash
+git clone https://github.com/Teachable-AI-Lab/iclr2026-rank1-fisher \
+  third_party/iclr2026-rank1-fisher
+git -C third_party/iclr2026-rank1-fisher checkout \
+  c7577f22551941e4bf58e33405fc78e8fcb608aa
+
+python experiments/mnist_unet_fisher_audit.py --self-check
+
+for seed in 0 1 2; do
+  CUDA_VISIBLE_DEVICES="$seed" python experiments/mnist_unet_fisher_audit.py \
+    --mode all --seed "$seed" --epochs 200 --batch-size 128 \
+    --calibration-count 1024 --test-count 1024 \
+    --timesteps 100 200 300 400 500 600 700 800 900 \
+    --output-dir runs/r19_mnist_unet_heldout &
+done
+wait
+```
+
+Torchvision downloads MNIST into `runs/data/mnist`; the four upstream gzip
+files should have MD5 values `f68b3c2dcbeaaa9fbdd348bbdeb94873`,
+`d53e105ee54ea40749a09fcbcd1e9432`,
+`9fb629c4189551a2d022fa330f9573f3`, and
+`ec29112dd5afa0611ce80d1b7f02629c`. Each run trains the source-paper
+`small-big` UNet on the full MNIST training split, then fits on 1,024 examples
+from the MNIST test split and scores on both that sample and 1,024 disjoint
+test-split examples with independent noise draws. It uses sample Gram matrices
+and never materializes a parameter-by-parameter Fisher.
+
+After all three envelopes finish:
+
+```bash
+python experiments/summarize_mnist_unet_fisher.py \
+  runs/r19_mnist_unet_heldout/seed_{0,1,2}/audit.json \
+  --summary runs/r19_mnist_unet_heldout/summary.json \
+  --figure-stem ../assets/iclr_1/figures/mnist_unet_fisher
+```
+
 ## Probe examples
 
 The checked-in SMDM input is `runs/data/gsm8k_tasks.jsonl`. A representative
