@@ -16,3 +16,5 @@ runtime/
 runs/*
 !runs/data/
 !runs/data/**
+# Upstream MNIST is downloaded and checksum-verified during reproduction.
+runs/data/mnist/
