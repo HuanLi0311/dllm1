@@ -103,21 +103,28 @@ def run(args) -> dict:
     base_split_metrics = probe._split_metrics
     mask_audit = []
     condition_index = 0
+    calibration_generator = None
 
     def fixed_records(*_unused, **_unused_kw):
         return [row["input_ids"] for row in selected]
 
     def independent_masks(probabilities, length, device, _generator):
-        nonlocal condition_index
-        calibration_generator = torch.Generator(device=device).manual_seed(
-            args.calibration_seed + 100_003 * condition_index
+        nonlocal calibration_generator, condition_index
+        paper_required = 256 if args.model_size == 170 else 128
+        if calibration_generator is None:
+            calibration_generator = torch.Generator(device=device).manual_seed(args.calibration_seed)
+            # The accepted SMDM probe draws this unused tensor before masks.
+            torch.rand((paper_required, length), device=device, generator=calibration_generator)
+        paper_probabilities = torch.full(
+            (paper_required,), float(probabilities[0]), device=device
+        )
+        paper_masks = base_sample_masks(
+            paper_probabilities, length, device, calibration_generator
         )
         test_generator = torch.Generator(device=device).manual_seed(
             args.test_seed + 100_003 * condition_index
         )
-        calibration_masks = base_sample_masks(
-            probabilities[: args.calibration_samples], length, device, calibration_generator
-        )
+        calibration_masks = paper_masks[: args.calibration_samples]
         test_masks = base_sample_masks(
             probabilities[args.calibration_samples :], length, device, test_generator
         )
@@ -186,6 +193,7 @@ def run(args) -> dict:
             "test_prefixes": list(PREFIXES),
             "calibration_seed": args.calibration_seed,
             "test_seed": args.test_seed,
+            "calibration_mask_protocol": "replay accepted seed-0 primary probe RNG stream",
             "calibration_records": manifest(calibration),
             "test_records": manifest(test),
             "calibration_records_sha256": _json_hash(manifest(calibration)),
