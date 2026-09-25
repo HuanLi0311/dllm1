@@ -273,7 +273,7 @@ def parse_args(argv=None):
     parser.add_argument("--seed", type=int, default=3407)
     parser.add_argument("--checkpoint", type=Path, default=ROOT.parent / "checkpoints/mdm_safetensors/mdm-1028M-3300e18-rsl-gsm8k.safetensors")
     parser.add_argument("--tokenizer", type=Path, default=ROOT / "tokenizer")
-    parser.add_argument("--gsm-train", type=Path, default=bench.DEFAULT_GSM_TRAIN)
+    parser.add_argument("--gsm-train", type=Path, default=ROOT / "SMDM/data/gsm8k/train_augmented.txt")
     parser.add_argument("--gsm-test", type=Path, default=bench.DEFAULT_GSM_TEST)
     parser.add_argument("--adaptation-data", type=Path, default=bench.DEFAULT_DOLLY)
     parser.add_argument("--device", default="cuda")
