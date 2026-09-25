@@ -15,6 +15,15 @@ and benchmark assets are omitted. Local changes in `lit_gpt/__init__.py`,
 hard dependencies on optional fused CUDA extensions with native PyTorch
 fallbacks.
 
+## ICLR 2026 rank-1 Fisher implementation
+
+`third_party/iclr2026-rank1-fisher` is a Git submodule pinned to commit
+`c7577f22551941e4bf58e33405fc78e8fcb608aa` of the authors' official
+[`Teachable-AI-Lab/iclr2026-rank1-fisher`](https://github.com/Teachable-AI-Lab/iclr2026-rank1-fisher)
+repository. The source repository does not include an explicit software
+license at that revision, so this project records the pointer and provenance
+without relicensing its contents.
+
 ## GSM8K
 
 `SMDM/data/gsm8k/train_no_aug.txt`, `SMDM/data/gsm8k/test.jsonl`, and the
