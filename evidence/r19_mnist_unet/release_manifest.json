@@ -1,0 +1,49 @@
+{
+  "schema_version": 2,
+  "status": "ok",
+  "submission_manifest": {
+    "path": "evidence/r19_mnist_unet/submission_manifest.json",
+    "sha256": "ad974d92363d83991203dbe02be5c9ecdff2dac363a812d39598fbd50290d693"
+  },
+  "raw_artifacts": [
+    {
+      "internal_path": "iclr_1/runs/r19_mnist_unet_heldout/seed_0/audit.json",
+      "internal_sha256": "3a128c51188ac461d23d12490ec9c61bfe18d59c24497b74707244d67e672a86",
+      "release_path": "evidence/r19_mnist_unet/raw/runs/r19_mnist_unet_heldout/seed_0/audit.json.gz",
+      "release_sha256": "2948fc8eebcfc5132107aa2f56a1c966b132787f9f2ee4ca181c6e107ceec3df"
+    },
+    {
+      "internal_path": "iclr_1/runs/r19_mnist_unet_heldout/seed_1/audit.json",
+      "internal_sha256": "250568947b588ee3091f4b9fd0e73b63461856ca00d8a0234d9a72a30901f113",
+      "release_path": "evidence/r19_mnist_unet/raw/runs/r19_mnist_unet_heldout/seed_1/audit.json.gz",
+      "release_sha256": "81f7fea928507b01c1b802e91a91a570f19520381ff3f44e7edf7bd300751d71"
+    },
+    {
+      "internal_path": "iclr_1/runs/r19_mnist_unet_heldout/seed_2/audit.json",
+      "internal_sha256": "4cacb7f883fa49963950c058673aa0c035121e90ddb897c651c8838917c92811",
+      "release_path": "evidence/r19_mnist_unet/raw/runs/r19_mnist_unet_heldout/seed_2/audit.json.gz",
+      "release_sha256": "0743759e487093a4e4bead6a90e803c7d731da1fadc66a8cc144a2b2f9f51da4"
+    },
+    {
+      "internal_path": "iclr_1/runs/r19_mnist_unet_heldout/summary.json",
+      "internal_sha256": "50c4a18cb60aee0dedf95767b58b204771882db97a29cfee130d58a6543b981a",
+      "release_path": "evidence/r19_mnist_unet/raw/runs/r19_mnist_unet_heldout/summary.json.gz",
+      "release_sha256": "66a061f40850c97c6924492e956f0e7984f1b8167dce388a78ce7410f1fc6617"
+    }
+  ],
+  "public_artifacts": [
+    {
+      "path": "iclr_1/experiments/mnist_unet_fisher_audit.py",
+      "sha256": "d9dee6e3553db34a974ee336b8078df8afbdcdbda096c0949f08a1901b4e7728"
+    },
+    {
+      "path": "iclr_1/experiments/summarize_mnist_unet_fisher.py",
+      "sha256": "978500630ae1d62a4df61727a81111a4e44550cf1cf9f736eb5c7144a7685ec4"
+    },
+    {
+      "path": "iclr_1/evidence/r19_mnist_unet/VALIDATION.md",
+      "sha256": "b5767edaeebc6fb590ed8c3a189115b72dfd834d837680872d594390baaa7e01"
+    }
+  ],
+  "bundle_script_sha256": "4ff80b5b04ce9581cb1086864018ce464ee5a5ee4e3f654b7ed3da6735f68857"
+}

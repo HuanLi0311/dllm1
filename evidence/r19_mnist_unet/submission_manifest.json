@@ -1,0 +1,44 @@
+{
+  "schema_version": 1,
+  "status": "ok",
+  "scope": "R19 public MNIST UNet source-setting bundle; separate from the primary and R18 manifests",
+  "geometry_artifacts": [
+    {
+      "path": "iclr_1/runs/r19_mnist_unet_heldout/seed_0/audit.json",
+      "sha256": "3a128c51188ac461d23d12490ec9c61bfe18d59c24497b74707244d67e672a86"
+    },
+    {
+      "path": "iclr_1/runs/r19_mnist_unet_heldout/seed_1/audit.json",
+      "sha256": "250568947b588ee3091f4b9fd0e73b63461856ca00d8a0234d9a72a30901f113"
+    },
+    {
+      "path": "iclr_1/runs/r19_mnist_unet_heldout/seed_2/audit.json",
+      "sha256": "4cacb7f883fa49963950c058673aa0c035121e90ddb897c651c8838917c92811"
+    },
+    {
+      "path": "iclr_1/runs/r19_mnist_unet_heldout/summary.json",
+      "sha256": "50c4a18cb60aee0dedf95767b58b204771882db97a29cfee130d58a6543b981a"
+    }
+  ],
+  "probes": [
+    {
+      "path": "iclr_1/experiments/mnist_unet_fisher_audit.py",
+      "sha256": "d9dee6e3553db34a974ee336b8078df8afbdcdbda096c0949f08a1901b4e7728"
+    },
+    {
+      "path": "iclr_1/experiments/summarize_mnist_unet_fisher.py",
+      "sha256": "978500630ae1d62a4df61727a81111a4e44550cf1cf9f736eb5c7144a7685ec4"
+    }
+  ],
+  "extra_artifacts": [
+    {
+      "path": "iclr_1/evidence/r19_mnist_unet/VALIDATION.md",
+      "sha256": "b5767edaeebc6fb590ed8c3a189115b72dfd834d837680872d594390baaa7e01"
+    }
+  ],
+  "training_seed_count": 3,
+  "timestep_count": 9,
+  "cell_count": 27,
+  "calibration_examples_per_cell": 1024,
+  "test_examples_per_cell": 1024
+}
