@@ -195,11 +195,42 @@ def _plot(rows: list[dict], output_stem: Path) -> None:
     plt.close(fig)
 
 
+def _write_table(rows: list[dict], output: Path) -> None:
+    lines = [
+        r"\begin{table*}[t]",
+        r"\centering",
+        r"\caption{MNIST UNet held-out relative Frobenius error.  Values are mean$\pm$sample SD over three independent training seeds; the final column counts seeds with lower rank-1 than diagonal error.}",
+        r"\label{tab:mnist-unet-heldout}",
+        r"\setlength{\tabcolsep}{5.0pt}",
+        r"\renewcommand{\arraystretch}{1.12}",
+        r"\begin{tabular*}{\textwidth}{@{\extracolsep{\fill}}ccccc@{}}",
+        r"\toprule",
+        r"\textbf{$t$} & \textbf{rank-1} & \textbf{diagonal} & \textbf{oracle} & \textbf{rank-1 seeds} \\",
+        r"\midrule",
+    ]
+    for row in rows:
+        rank1 = row["test_rank1_error"]
+        diagonal = row["test_diagonal_error"]
+        oracle = row["test_oracle_error"]
+        wins = sum(a < b for a, b in zip(rank1["values"], diagonal["values"]))
+        lines.append(
+            f'{row["timestep"]} & '
+            f'${rank1["mean"]:.4f}\\pm{rank1["sample_sd"]:.4f}$ & '
+            f'${diagonal["mean"]:.4f}\\pm{diagonal["sample_sd"]:.4f}$ & '
+            f'${oracle["mean"]:.4f}\\pm{oracle["sample_sd"]:.4f}$ & '
+            f'{wins}/3 \\\\'
+        )
+    lines.extend([r"\bottomrule", r"\end{tabular*}", r"\end{table*}"])
+    output.parent.mkdir(parents=True, exist_ok=True)
+    output.write_text("\n".join(lines) + "\n", encoding="utf-8")
+
+
 def main(argv=None) -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("audits", type=Path, nargs="+")
     parser.add_argument("--summary", type=Path, required=True)
     parser.add_argument("--figure-stem", type=Path, required=True)
+    parser.add_argument("--table", type=Path)
     args = parser.parse_args(argv)
 
     records, files = _load(args.audits)
@@ -216,10 +247,13 @@ def main(argv=None) -> None:
     args.summary.parent.mkdir(parents=True, exist_ok=True)
     args.summary.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
     _plot(aggregate, args.figure_stem)
+    if args.table:
+        _write_table(aggregate, args.table)
     print(json.dumps({
         "status": "ok",
         "summary": str(args.summary),
         "figure": str(args.figure_stem),
+        "table": str(args.table) if args.table else None,
     }))
 
 
