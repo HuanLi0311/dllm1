@@ -16,8 +16,9 @@ import torch
 
 
 ROOT = Path(__file__).resolve().parents[1]
-if str(ROOT) not in sys.path:
-    sys.path.insert(0, str(ROOT))
+for import_root in (ROOT, ROOT.parent):
+    if str(import_root) not in sys.path:
+        sys.path.insert(0, str(import_root))
 
 from experiments import dllm_rank1_probe as probe
 
